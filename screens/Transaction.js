@@ -2,14 +2,15 @@ import React, { Component } from "react";
 import {
   View,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   Text,
-  TextInput,
   ImageBackground,
   Image
 } from "react-native";
 import * as Permissions from "expo-permissions";
 import { BarCodeScanner } from "expo-barcode-scanner";
+import db from "../config";
 
 const bgImage = require("../assets/background2.png");
 const appIcon = require("../assets/appIcon.png");
@@ -32,7 +33,7 @@ export default class TransactionScreen extends Component {
 
     this.setState({
       /*status === "granted" é verdadeiro se o usuário concedeu permissão
-          status === "granted" é falso se o usuário não concedeu permissão
+          status === "granted" é falso se o usuário não concedeu a permissão
         */
       hasCameraPermissions: status === "granted",
       domState: domState,
@@ -56,6 +57,30 @@ export default class TransactionScreen extends Component {
         scanned: true
       });
     }
+  };
+
+  handleTransaction = () => {
+    var { bookId } = this.state;
+    db.collection("books")
+      .doc(bookId)
+      .get()
+      .then(doc => {
+        console.log(doc.data())
+        var book = doc.data();
+        if (book.is_book_available) {
+          this.initiateBookIssue();
+        } else {
+          this.initiateBookReturn();
+        }
+      });
+  };
+
+  initiateBookIssue = () => {
+    console.log("Livro entregue para o aluno!");
+  };
+
+  initiateBookReturn = () => {
+    console.log("Livro devolvido à biblioteca!");
   };
 
   render() {
@@ -93,7 +118,7 @@ export default class TransactionScreen extends Component {
             <View style={[styles.textinputContainer, { marginTop: 25 }]}>
               <TextInput
                 style={styles.textinput}
-                placeholder={"ID do Estudante"}
+                placeholder={"ID do Aluno"}
                 placeholderTextColor={"#FFFFFF"}
                 value={studentId}
               />
@@ -104,6 +129,12 @@ export default class TransactionScreen extends Component {
                 <Text style={styles.scanbuttonText}>Digitalizar</Text>
               </TouchableOpacity>
             </View>
+            <TouchableOpacity
+              style={[styles.button, { marginTop: 25 }]}
+              onPress={this.handleTransaction}
+            >
+              <Text style={styles.buttonText}>Enviar</Text>
+            </TouchableOpacity>
           </View>
         </ImageBackground>
       </View>
@@ -171,6 +202,19 @@ const styles = StyleSheet.create({
   scanbuttonText: {
     fontSize: 20,
     color: "#0A0101",
+    fontFamily: "Rajdhani_600SemiBold"
+  },
+  button: {
+    width: "43%",
+    height: 55,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F48D20",
+    borderRadius: 15
+  },
+  buttonText: {
+    fontSize: 24,
+    color: "#FFFFFF",
     fontFamily: "Rajdhani_600SemiBold"
   }
 });
